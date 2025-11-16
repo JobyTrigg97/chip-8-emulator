@@ -1,6 +1,6 @@
 #include <array>
 
-Class Chip8{
+class Chip8{
 	// unint8_t is an unsighned 8-bit integer type (0-255)
 	// unit16_t is an unsigned 16-bit integer type (0-65535)
 public:
