@@ -61,3 +61,68 @@ void Chip8::loadROM(const char* filename) {
 	}
 	file.close();
 }
+
+void Chip8::emulatorCycle() {
+	// Memory stores 8-bit values, but each CHIP-8 operation code is 16 bits
+	// We read the first byte from memory[programCounter] and shift it left by 8 bits,
+	// moving it into the upper half of a 16-bit number.
+	// Then we combine it using OR with the next byte, memory[programCounter + 1],
+	// which fills in the lower 8 bits. The result is one 16-bit opcode.
+	operationCode = memory[programCounter] << 8 | memory[programCounter + 1];
+	switch (operationCode & 0xF000) {
+	case 0x00E0: 
+		display.fill(0); 
+		drawFlag = true;
+		programCounter += 2;
+		break;
+	case 0x00EE: 
+		--stackPointer;
+		programCounter = stack[stackPointer];
+		programCounter += 2;
+		break;
+	case 0x1000:
+		programCounter = operationCode & 0x0FFF;
+		break;
+	case 0x2000:
+		stack[stackPointer] = programCounter;
+		programCounter = operationCode & 0x0FFF; 
+		break;
+	case 0x3000:
+		if (registers[(operationCode & 0x0F00) >> 8] == (operationCode & 0x00FF)) {
+			programCounter += 4;
+		}
+		else {
+			programCounter += 2;
+		}
+		break;
+	case 0x4000:
+		if (registers[(operationCode & 0x0F00) >> 8] != (operationCode & 0x00FF)) {
+			programCounter += 4;
+		}
+		else {
+			programCounter += 2;
+		}
+		break;
+	case 0x5000:
+		if (registers[(operationCode & 0x0F00) >> 8] == registers[(operationCode & 0x00F0) >> 4]) {
+			programCounter += 4;
+		}
+		else { 
+			programCounter += 2; 
+		} 
+		break;
+	case 0x9000: 
+		if (registers[(operationCode & 0x0F00) >> 8] != registers[(operationCode & 0x00F0) >> 4]) {
+			programCounter += 4;
+		}
+		else {
+			programCounter += 2;
+		}
+		break;
+
+	default:
+		std::cerr << "Unknown 0x0000 operation code" << std::hex << operationCode << "\n";
+		programCounter += 2;
+		
+	}
+}
