@@ -7,7 +7,7 @@ Chip8::Chip8() {
 	initialize();
 }
 void Chip8::initialize() {
-	programCounter = 0x200; //staring memory address
+	programCounter = 0x200; //starting memory address; chip-8 started the game at 0x200. 0x000 was reserved for the interpreter
 	operationCode = 0;
 	indexRegister = 0;
 	stackPointer = 0;
@@ -44,4 +44,20 @@ void Chip8::initialize() {
 		memory[i] = fontset[i];
 	}
 }
+void Chip8::loadROM(const char* filename) {
+	std::ifstream file(filename, std::ios::binary | std::ios::ate); // raw binary data and place the read pointer at the end of the file
+	if (!file) {
+		std::cerr << "Failed to open ROM\n";
+		return;
+	}
+	std::streamsize size = file.tellg(); // get file size
+	file.seekg(0, std::ios::beg); // now we have the file size move the read pointer to the start of the file 
 
+	std::vector<char> buffer(size);
+	if (file.read(buffer.data(), size)) {
+		for (size_t i = 0; i < buffer.size(); ++i) {
+			memory[0x200 + i] = buffer[i]; //chip-8 started the game at 0x200 0x000 was reserved for the interpreter
+		}
+	}
+	file.close();
+}
